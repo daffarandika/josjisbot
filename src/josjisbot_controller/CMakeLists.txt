@@ -11,8 +11,8 @@ find_package(sensor_msgs REQUIRED)
 
 include_directories(include)
 
-add_executable(joystick_listener src/joystick_listener.cpp)
-ament_target_dependencies(joystick_listener rclcpp sensor_msgs)
+add_executable(joystick_republisher src/joystick_republisher.cpp)
+ament_target_dependencies(joystick_republisher rclcpp sensor_msgs)
 
 install(
 	DIRECTORY include
@@ -20,7 +20,7 @@ install(
 )
 
 install(TARGETS
-	joystick_listener
+	joystick_republisher
 	DESTINATION lib/${PROJECT_NAME}
 )
 
