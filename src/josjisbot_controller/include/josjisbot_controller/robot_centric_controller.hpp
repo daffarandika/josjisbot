@@ -8,6 +8,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <rclcpp/node.hpp>
 #include <string>
+#include <vector>
 
 class RobotCentricController:
 	public rclcpp::Node,
@@ -22,6 +23,7 @@ private:
 	std::unique_ptr<tf2_ros::TransformBroadcaster> transform_broadcaster_;
 	TransformStamped transform_stamped_;
 
+	const std::vector<float> wheel_angles_ = {45.0, 135.0, 225.0, 315.0}; // alpha 1-4
 	Float32MultiArray wheel_cmd_;
 	TransformStamped tf_;
 	rclcpp::Time prev_time_;

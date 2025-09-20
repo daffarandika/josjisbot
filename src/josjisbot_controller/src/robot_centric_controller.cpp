@@ -1,8 +1,11 @@
 #include "josjisbot_controller/robot_centric_controller.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include <rclcpp/logging.hpp>
 #include <string>
+#include <math.h>
 
 #define CURRENT_TIME this->get_clock()->now()
+#define PI M_PI
 
 using namespace std::chrono_literals;
 using namespace std::placeholders;
@@ -31,12 +34,25 @@ RobotCentricController::RobotCentricController(const std::string& name)
 
 void RobotCentricController::cmdCallback(const TwistStamped& msg)
 {
-
+	auto wheel_cmd = this->inverseKinematics(msg);
+	RCLCPP_INFO_STREAM(this->get_logger(), "w1: " << wheel_cmd.data[0] << " w2: " << wheel_cmd.data[1] << " w3: " << wheel_cmd.data[2] << " w4: " << wheel_cmd.data[3]);
 }
 
 Float32MultiArray RobotCentricController::inverseKinematics(const TwistStamped& cmd)
 {
-	return Float32MultiArray();
+
+	for (int i = 0; i < 4; i++) {
+		this->wheel_cmd_.data[i] = (
+			// x dan y dibalik karena ROS menggunakan REP 103
+			-sin(PI/180 * this->wheel_angles_[i]) * cmd.twist.linear.y +
+			cos(PI/180 * this->wheel_angles_[i]) * cmd.twist.linear.x +
+			cmd.twist.angular.z
+		);
+	}
+	for (int i  = 0; i < 4; i++) {
+		RCLCPP_INFO(this->get_logger(), "w%d: (%f) %f", i, wheel_angles_[i], wheel_cmd_.data[i]);
+	}
+	return this->wheel_cmd_;
 }
 
 TwistStamped  RobotCentricController::forwardKinematics(const Float32MultiArray& wheel_cmd)
