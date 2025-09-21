@@ -100,6 +100,7 @@ Float32MultiArray RobotCentricController::inverseKinematics(const TwistStamped& 
 ```
 
 4. Enkapsulasi
+
 Enkapsulasi sudah dilakukan berulangkali dalam program ini, berikut salah satu contohnya:
 ```cpp
 class RobotCentricController:
