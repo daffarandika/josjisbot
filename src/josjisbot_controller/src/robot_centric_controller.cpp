@@ -2,6 +2,7 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include <rclcpp/logging.hpp>
 #include <string>
+#include <tf2/LinearMath/Quaternion.hpp>
 #include <math.h>
 
 #define CURRENT_TIME this->get_clock()->now()
@@ -34,15 +35,17 @@ RobotCentricController::RobotCentricController(const std::string& name)
 
 void RobotCentricController::cmdCallback(const TwistStamped& msg)
 {
-	auto wheel_cmd = this->inverseKinematics(msg);
-	RCLCPP_INFO_STREAM(this->get_logger(), "w1: " << wheel_cmd.data[0] << " w2: " << wheel_cmd.data[1] << " w3: " << wheel_cmd.data[2] << " w4: " << wheel_cmd.data[3]);
+	this->wheel_cmd_ = this->inverseKinematics(msg);
+	this->wheel_cmd_pub_->publish(this->wheel_cmd_);
 }
 
 Float32MultiArray RobotCentricController::inverseKinematics(const TwistStamped& cmd)
 {
+	auto wheel_cmd = Float32MultiArray();
+	wheel_cmd.data = {0,0,0,0};
 
 	for (int i = 0; i < 4; i++) {
-		this->wheel_cmd_.data[i] = (
+		wheel_cmd.data[i] = (
 			// x dan y dibalik karena ROS menggunakan REP 103
 			-sin(PI/180 * this->wheel_angles_[i]) * cmd.twist.linear.y +
 			cos(PI/180 * this->wheel_angles_[i]) * cmd.twist.linear.x +
@@ -52,12 +55,35 @@ Float32MultiArray RobotCentricController::inverseKinematics(const TwistStamped& 
 	for (int i  = 0; i < 4; i++) {
 		RCLCPP_INFO(this->get_logger(), "w%d: (%f) %f", i, wheel_angles_[i], wheel_cmd_.data[i]);
 	}
-	return this->wheel_cmd_;
+	return wheel_cmd;
 }
 
 TwistStamped  RobotCentricController::forwardKinematics(const Float32MultiArray& wheel_cmd)
 {
-	return TwistStamped();
+	auto cmd = TwistStamped();
+	float vy = (
+		-sin(PI/180 * this->wheel_angles_[0]) * wheel_cmd.data[0]+
+		-sin(PI/180 * this->wheel_angles_[1]) * wheel_cmd.data[1]+
+		-sin(PI/180 * this->wheel_angles_[2]) * wheel_cmd.data[2]+
+		-sin(PI/180 * this->wheel_angles_[3]) * wheel_cmd.data[3] 
+	)/2;
+
+	float vx = (
+		cos(PI/180 * this->wheel_angles_[0]) * wheel_cmd.data[0]+
+		cos(PI/180 * this->wheel_angles_[1]) * wheel_cmd.data[1]+
+		cos(PI/180 * this->wheel_angles_[2]) * wheel_cmd.data[2]+
+		cos(PI/180 * this->wheel_angles_[3])* wheel_cmd.data[3] 
+	)/2;
+	float omega = (wheel_cmd.data[0] + wheel_cmd.data[1] + wheel_cmd.data[2] + wheel_cmd.data[3])/4;
+	RCLCPP_INFO_STREAM(this->get_logger(),
+										" vx: " << vx << 
+										" vy: " << vy << 
+										" omega: " << omega
+										);
+	cmd.twist.linear.x = vx;
+	cmd.twist.linear.y = vy;
+	cmd.twist.angular.z = omega;
+	return cmd;
 }
 
 // Float32MultiArray RobotCetricController::inverseKine
