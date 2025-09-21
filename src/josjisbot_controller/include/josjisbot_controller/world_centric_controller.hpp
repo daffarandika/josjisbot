@@ -1,20 +1,21 @@
-#ifndef ROBOT_CENTRIC_CONTROLLER_H
-#define ROBOT_CENTRIC_CONTROLLER_H
+#ifndef WORLD_CENTRIC_CONTROLLER_H
+#define WORLD_CENTRIC_CONTROLLER_H
 
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "josjisbot_controller/robot_controller.hpp"
 #include <rclcpp/time.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 #include <rclcpp/node.hpp>
 #include <string>
 #include <array>
 
-class RobotCentricController:
+class WorldCentricController:
 	public rclcpp::Node,
 	public RobotController
 {
 public:
-	RobotCentricController(const std::string& name);
+	WorldCentricController(const std::string& name);
 
 private:
 	rclcpp::Publisher<Float32MultiArray>::SharedPtr wheel_cmd_pub_;
@@ -29,4 +30,4 @@ private:
 	TwistStamped forwardKinematics(const Float32MultiArray& wheel_cmd) override;
 };
 
-#endif // !ROBOT_CENTRIC_CONTROLLER_H
+#endif // !WORLD_CENTRIC_CONTROLLER_H

@@ -1,11 +1,12 @@
 #include "josjisbot_controller/robot_centric_controller.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include <rclcpp/executors.hpp>
 #include <rclcpp/logging.hpp>
 #include <string>
 #include <tf2/LinearMath/Quaternion.hpp>
+#include <tf2/LinearMath/Matrix3x3.hpp>
 #include <math.h>
 
-#define CURRENT_TIME this->get_clock()->now()
 #define PI M_PI
 
 using namespace std::chrono_literals;
@@ -13,9 +14,12 @@ using namespace std::placeholders;
 
 RobotCentricController::RobotCentricController(const std::string& name)
 : Node(name)
+, x_(0.0)
+, y_(0.0)
+, heading_(0.0)
 {
 	this->wheel_cmd_pub_ = this->create_publisher<Float32MultiArray>(
-		"/josjisbot_controller/wheel_cmd",
+		"/josjisbot_controllers/commands",
 		5
 	);
 
@@ -24,18 +28,26 @@ RobotCentricController::RobotCentricController(const std::string& name)
 		5,
 		std::bind(&RobotCentricController::cmdCallback, this, _1)
 	);
-
-	this->transform_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-
-	this->tf_.header.set__frame_id("odom");
-	this->tf_.set__child_frame_id("base_footprint");
 	this->wheel_cmd_.set__data({0.0, 0.0, 0.0, 0.0});
-	this->prev_time_ = CURRENT_TIME;
 }
 
 void RobotCentricController::cmdCallback(const TwistStamped& msg)
 {
 	this->wheel_cmd_ = this->inverseKinematics(msg);
+
+	this->x_ += msg.twist.linear.x + simulateNoise();
+	this->y_ += msg.twist.linear.y + simulateNoise();
+	this->heading_ += msg.twist.angular.z + simulateNoise();
+	this->heading_ += msg.twist.angular.z + simulateNoise();
+	this->heading_ = this->normalizeAngle(this->heading_);
+
+
+	RCLCPP_INFO_STREAM(this->get_logger(),
+										"x: " << this->x_ <<
+										" y: " << this->y_ <<
+										" w: " << this->heading_
+										);
+
 	this->wheel_cmd_pub_->publish(this->wheel_cmd_);
 }
 
