@@ -1,7 +1,7 @@
 # Josjisbot
 
 ## Penjelasan singkat
-Josjisbot adalah robot holonomic dengan konfigurasi x-drive dan roda omni. Saat ini josjisbot baru berbentuk virtual dan baru bisa dikendalikan menggunakan `teleop_twist_keyboard`, meski demikian josjisbot memiliki dua tipe controller: robot-centric dan world-centric. Sekarang ini kedua controller memang belum bisa menggerakan robot secara fisik, namun sudah controller sudah menghitung kecepatan yang dibutuhkan oleh setiap roda di topic `/josjisbot_controllers/commands`. Yang nantinya daapat di-susbscribe oleh microcontroller menggunakan microros.
+Josjisbot adalah robot holonomic dengan konfigurasi x-drive dan roda omni. Saat ini josjisbot baru berbentuk virtual dan baru bisa dikendalikan menggunakan `teleop_twist_keyboard`, meski demikian josjisbot memiliki dua tipe controller: robot-centric dan world-centric. Sekarang ini kedua controller memang belum bisa menggerakan robot secara fisik, namun kedua controller sudah bisa menghitung kecepatan yang dibutuhkan oleh setiap roda di topic `/josjisbot_controllers/commands`. Yang nantinya daapat di-susbscribe oleh microcontroller menggunakan microros.
 
 ![](./x_drive.svg)
 ### Robot-centric vs world-centric?
