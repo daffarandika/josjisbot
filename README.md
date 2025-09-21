@@ -35,6 +35,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
 ## Penjelasan Program
 Program ini sudah dibuat menggunakan OOP dan menerapkan konsep dari 4 pilar OOP
 1. Inheritance
+
 Program dalam project ini telah menerapkan inheritance menggunakan class dari rclcpp::Node dan class buatan sendiri bernama RobotController:
 ```cpp
 class RobotController {
@@ -48,6 +49,7 @@ protected:
 class ini kemudian di-inherit oleh class WorldCentricController dan RobotCentricController, class ini secara tidak langsung juga mengabstraksi logika-logika yang sering digunakan ke dalam sebuah method
 
 2. Abstraksi
+   
 Program dalam project ini berulang kali menggunakan abstraksi untuk memudahkan programmer kedepannya, salah contoh penerapannya antara lain:
 ```cpp
 void RobotCentricController::cmdCallback(const TwistStamped& msg)
@@ -65,5 +67,59 @@ void RobotCentricController::cmdCallback(const TwistStamped& msg)
 Di mana inverseKinematics, simulateNoise, dan normalizeAngle merupakan method yang telah dibuat sebelumnya di class RobotController
 
 3. Polymorfisme
-Program di project ini telah menerapkan polimorfisme ketika class WorldCentricController dan RobotCentricController meng-inherit RobotController
+
+Program di project ini telah menerapkan polimorfisme ketika class WorldCentricController dan RobotCentricController meng-inherit RobotController.
+
+RobotController
+
+```cpp
+class RobotController {
+protected:
+	virtual Float32MultiArray inverseKinematics(const TwistStamped& cmd) = 0;
+	virtual TwistStamped forwardKinematics(const Float32MultiArray& wheel_cmd) = 0;
+	...
+};
+```
+
+WorldCentricController
+
+```cpp
+Float32MultiArray WorldCentricController::inverseKinematics(const TwistStamped& cmd)
+{
+...
+}
+```
+
+RobotCentricController
+
+```cpp
+Float32MultiArray RobotCentricController::inverseKinematics(const TwistStamped& cmd)
+{
+...
+}
+```
+
 4. Enkapsulasi
+Enkapsulasi sudah dilakukan berulangkali dalam program ini, berikut salah satu contohnya:
+```cpp
+class RobotCentricController:
+	public rclcpp::Node,
+	public RobotController
+{
+public:
+	RobotCentricController(const std::string& name);
+
+private:
+	rclcpp::Publisher<Float32MultiArray>::SharedPtr wheel_cmd_pub_;
+	rclcpp::Subscription<TwistStamped>::SharedPtr cmd_sub_;
+
+	const std::array<float, 4> wheel_angles_ = {45.0, 135.0, 225.0, 315.0}; // alpha 1-4
+	Float32MultiArray wheel_cmd_;
+	float x_, y_, heading_;
+
+	void cmdCallback(const TwistStamped& msg);
+	Float32MultiArray inverseKinematics(const TwistStamped& cmd) override;
+	TwistStamped forwardKinematics(const Float32MultiArray& wheel_cmd) override;
+};
+```
+Program telah dipisah berdasarkan visibiltas yang diinginkan dari luar class.
